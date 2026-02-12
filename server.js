@@ -1,34 +1,43 @@
-const WebSocket = require('ws');
+require("dotenv").config();
+const express = require('express')
+const http = require('http');
+const { Server } = require('socket.io')
 
-const server = new WebSocket.Server({
-    port: 3000
-});  
-// socket.on => connection, message
-// socket.send
-//
+const socketRouter = require('./socket/socket.router')
 
-server.on('connection', (socket) => {
-
-    console.log("Client connected");
-
-    socket.send("Welcome client!");
-    socket.send("hoe you are doing great");
-
-    socket.on('message', (message) => {
-
-        console.log("Received:", message.toString());
-
-        // broadcast to everyone
-        server.clients.forEach(client => {
-            if(client.readyState === WebSocket.OPEN){
-                client.send(message.toString());
-            }
-        });
-
-    });
-
-    socket.on('close', () => {
-        console.log("Client disconnected");
-    });
-
+const { isUserExist } = require('./middleware/common')
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
 });
+
+
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+// Plug socket router
+socketRouter(io);
+
+// app.get('/:id', isUserExist, (req, res) => {
+//     res.send(`Hello from server ${id}`)
+// })
+app.get('/:id', isUserExist, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+})
+
+
+
+const port = process.env.PORT
+server.listen(port, () => {
+    console.log(`server running on port ${port}`)
+})
+
+
+
+
+

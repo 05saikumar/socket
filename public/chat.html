@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+  <body>
+    <span id="welcome"></span> <br />
+    <!-- <input id="receiver_id" placeholder="Enter receiver id" /> -->
+    <!-- <button onclick="sendReceiverId()">Enter</button> -->
+    <!-- <br /> -->
+    <!-- <br /> -->
+    <!-- <input id="id" />
+    <button onclick="sendUserId()">Enter</button>
+    <br />
+    <br /> -->
+
+    <input
+      id="receiver_id"
+      placeholder="Enter receiver id"
+      style="width: 6.5rem"
+    />
+    <input id="msg" />
+    <button onclick="send()">Send</button>
+
+    <ul id="chat"></ul>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script>
+      const socket = io("http://localhost:3000");
+      // client-side
+      socket.on("connect", () => {
+        // # welcome msg
+        socket.on("client_ready", (welcome) => {
+          const data = welcome;
+          const span = document.getElementById("welcome");
+          span.innerText = welcome + "!!!!!";
+        });
+      });
+
+      // # emitting to client
+      socket.on("message", (data) => {
+        const li = document.createElement("li");
+        message = "You : " + data.message;
+        li.innerText = message;
+        document.getElementById("chat").appendChild(li);
+      });
+      socket.on("private_message", (data) => {
+        const li = document.createElement("li");
+        message = data.sender_id + "." + data.sender_name + ": " + data.message;
+        li.innerText = message;
+        document.getElementById("chat").appendChild(li);
+      });
+
+      // socket.on("id", (userId) => {
+      //   const li = document.createElement("li");
+      //   li.innerText = "User joined: " + userId;
+      //   document.getElementById("chat").appendChild(li);
+      // });
+
+      //   socket.on("ack", (msg) => {
+      //     console.log("message from client : true");
+      //   });
+
+      function send() {
+        const msg = document.getElementById("msg").value;
+        const receiver_id = document.getElementById("receiver_id").value;
+        if (!receiver_id) {
+          socket.emit("message", msg);
+          return;
+        }
+
+        const payload = {
+          msg: msg,
+          receiver_id: receiver_id,
+        }
+        socket.emit("private_message", payload);
+      }
+
+      // function sendUserId() {
+      //   const userId = document.getElementById("id").value;
+      //   socket.emit("id", userId);
+      // }
+    </script>
+  </body>
+</html>
