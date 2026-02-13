@@ -1,21 +1,124 @@
 <!doctype html>
 <html>
+  <head>
+    <link rel="stylesheet" href="stylee.css" />
+  </head>
+
+  <body>
+    <div class="chat-container">
+      <div class="chat-header">
+        <span id="welcome">Connecting...</span>
+      </div>
+
+      <div class="chat-input">
+        <select id="users">
+          <option>Select User</option>
+        </select>
+        <!-- <input id="receiver-id" placeholder="Receiver id" /> -->
+        <input id="msg" placeholder="Type a message..." />
+        <button onclick="send()">Send</button>
+      </div>
+
+      <ul id="chat" class="chat-box"></ul>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script>
+      const socket = io("http://localhost:3000");
+      // console.log('user id......')
+      socket.on("client_ready", (welcome) => {
+        document.getElementById("welcome").innerText = welcome;
+      });
+      // # list users
+      socket.on("users_list", (users) => {
+        users.forEach((user) => {
+          select_users(user);
+        });
+      });
+
+      // # self message
+      socket.on("message", (data) => {
+        createMessage("You", data.message, "outgoing");
+      });
+
+      // # one - one message
+      socket.on("private_message", (data) => {
+        createMessage(
+          data.sender_name || data.sender_id,
+          data.message,
+          "incoming",
+        );
+      });
+
+      // # load one - one messages
+      socket.on("conversation_loaded", (chatHistory) =>{
+        chatHistory.forEach(message => {
+          console.log(message)
+        });
+      })
+
+
+
+      // # functions
+      function select_users(user) {
+        const option = document.createElement("option");
+        option.value = user.id;
+        option.innerText = `${user.user_name}`;
+        document.getElementById("users").appendChild(option);
+      }
+
+      function createMessage(sender, message, type) {
+        const li = document.createElement("li");
+        li.classList.add("message", type);
+        li.innerText = `${sender}: ${message}`;
+        document.getElementById("chat").appendChild(li);
+        // auto scroll
+        li.scrollIntoView({ behavior: "smooth" });
+      }
+
+      function send() {
+        const msgInput = document.getElementById("msg").value;
+        // console.log(msgInput,'ddddddd')
+        // const receiver_id = document.getElementById("receiver-id").value;
+        const receiver_id = document.getElementById("users").value;
+        // console.log(receiver_id,'rrrrrrrrr')
+        if (!msgInput) return;
+        if (!receiver_id) {
+          socket.emit("message", msgInput);
+        } else {
+          socket.emit("private_message", {
+            message: msgInput,
+            receiver_id,
+          });
+        }
+        msgInput.value = "";
+      }
+
+      const usersDropDown = document.getElementById("users");
+      usersDropDown.addEventListener("change", function (event) {
+        const selectedUserId = usersDropDown.value;
+        // console.log(selectUserId,'.......')
+        loadConversation(selectedUserId);
+      });
+      function loadConversation(receiverId) {
+        // console.log('userid',receiverId)
+        socket.emit("load_conversation", receiverId);
+      }
+    </script>
+  </body>
+</html>
+
+<!-- 
+
+<!doctype html>
+<html>
   <body>
     <span id="welcome"></span> <br />
-    <!-- <input id="receiver_id" placeholder="Enter receiver id" /> -->
-    <!-- <button onclick="sendReceiverId()">Enter</button> -->
-    <!-- <br /> -->
-    <!-- <br /> -->
-    <!-- <input id="id" />
-    <button onclick="sendUserId()">Enter</button>
+    <input id="receiver_id" placeholder="Enter receiver id" />
     <br />
-    <br /> -->
-
-    <input
-      id="receiver_id"
-      placeholder="Enter receiver id"
-      style="width: 6.5rem"
-    />
+    <br />
+   
     <input id="msg" />
     <button onclick="send()">Send</button>
 
@@ -37,15 +140,21 @@
       // # emitting to client
       socket.on("message", (data) => {
         const li = document.createElement("li");
-        message = "You : " + data.message;
+        message = data.id + "." + data.user_name + ": " + data.message;
         li.innerText = message;
         document.getElementById("chat").appendChild(li);
       });
-      socket.on("private_message", (data) => {
+      const receiver = 2;
+      socket.on(`message${receiver}`, (data) => {
         const li = document.createElement("li");
-        message = data.sender_id + "." + data.sender_name + ": " + data.message;
+        message = "From Sai : " + data.message;
         li.innerText = message;
         document.getElementById("chat").appendChild(li);
+      });
+
+      socket.emit("private_message", {
+        toUserId: "2",
+        message: "Hello bro",
       });
 
       // socket.on("id", (userId) => {
@@ -60,17 +169,12 @@
 
       function send() {
         const msg = document.getElementById("msg").value;
-        const receiver_id = document.getElementById("receiver_id").value;
-        if (!receiver_id) {
-          socket.emit("message", msg);
-          return;
-        }
+        socket.emit("message", msg); // socket.emit('event_name',data)
+      }
 
-        const payload = {
-          msg: msg,
-          receiver_id: receiver_id,
-        }
-        socket.emit("private_message", payload);
+      function sendReceiverId() {
+        const receiver_id = document.getElementById("receiver_id").value;
+        socket.emit("receiver_id", receiver_id);
       }
 
       // function sendUserId() {
@@ -80,3 +184,5 @@
     </script>
   </body>
 </html>
+
+ -->

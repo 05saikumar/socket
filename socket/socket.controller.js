@@ -1,32 +1,35 @@
-const socketService = require('./socket.service')
-const users = {};
+const {saveMessage, loadMessages} = require('./socket.service')
+module.exports = {
+    handleUserId: (socket, io, userId) => {
+        // console.log(id)
+        socket.emit('id', userId);
+    },
 
-exports.handleUserId = (socket, io, userId) => {
-    // console.log(id)
-    users[socket.id] = userId
-    socket.emit('id', userId);
-}
 
-exports.handleMessage = (socket, io, data) => {
-    socket.emit('message', data);
-}
+    handleMessage: (socket, io, data) => {
+        socket.emit('message', data);
+    },
 
-exports.privateMessage = (socket, io, data) => {
-    console.log(data, '...')
-    // data = { msg: 'helo sai', receiver_id: '1', from_id: '1', from_user: 'sai' } 
+    privateMessage: async (socket, io, data) => {
+        // console.log(data, '...')
+        // data = { message: 'helo dhanu', receiver_id: '2', sender_id: '1', sender_name: 'sai'}
+        const msg_payload = data
+        // console.log(payload,'dddd')
+        const toUserId = String(data.receiver_id)
+        if (toUserId === data.from_id) {
+            // console.log('same same')
+            socket.emit("message", msg_payload);
+            return
+        }
+        // console.log(msg_payload,'payload')
+        const savedMsg = await saveMessage(msg_payload)
+        socket.emit('message', msg_payload);
+        socket.to(toUserId).emit("private_message", msg_payload);
 
-    const refined_data = {
-        sender_id: data.from_id,
-        sender_name: data.from_user,
-        message: data.msg,
+    },
+    loadChat : async(socket,io,payload) => {
+        const messages = await loadMessages(payload)
+        socket.emit('conversation_loaded',messages)
     }
-    const toUserId = data.receiver_id
-    if(toUserId === data.from_id){
-        console.log('same same')
-        socket.emit("message", refined_data);
-        return
-    }
 
-    socket.to(toUserId).emit("private_message", refined_data);
-
-};
+}

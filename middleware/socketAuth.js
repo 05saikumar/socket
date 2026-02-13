@@ -18,7 +18,7 @@ module.exports = (socket, next) => {
             user_name: data.user_name
         };
 
-        socket.join(socket.user.id); // creating a channel for each user
+        socket.join(String(socket.user.id)); // creating a channel for each user 1,2
         next();
 
     } catch (err) {

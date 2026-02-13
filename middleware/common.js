@@ -20,9 +20,12 @@ module.exports = {
                 { user_data: data },
                 process.env.JWT_SECRET
             )
+
+            // # sending cookie
             res.cookie('token', token, {
                 httpOnly: true
             })
+            
             // console.log(req.user,'ddddd')
             next()
 
