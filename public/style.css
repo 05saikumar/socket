@@ -85,6 +85,7 @@ body {
 }
 
 
+
 .chat-input input {
   flex: 1;
   padding: 10px;
@@ -92,6 +93,7 @@ body {
   border: 1px solid #e6e9ef;
   outline: none;
 }
+
 
 .chat-input input:focus {
   border-color: #728b07;
@@ -108,4 +110,10 @@ body {
 
 .chat-input button:hover {
   background: #728b07;
+}
+
+.select-users{
+  padding: 10px;
+  border-radius: 8px;
+ 
 }

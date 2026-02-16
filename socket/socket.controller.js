@@ -29,7 +29,13 @@ module.exports = {
     },
     loadChat : async(socket,io,payload) => {
         const messages = await loadMessages(payload)
-        socket.emit('conversation_loaded',messages)
+        const communicators = {
+            sender_id : payload.sender_id,
+            receiver_id : payload.receiver_id
+        } 
+        // messages.communicators = communicators
+        // console.log(messages,'comcators......')
+        socket.emit('conversation_loaded',communicators,messages)
     }
 
 }

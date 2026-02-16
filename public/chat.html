@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <link rel="stylesheet" href="stylee.css" />
+    <link rel="stylesheet" href="style.css" />
   </head>
 
   <body>
@@ -11,7 +11,7 @@
       </div>
 
       <div class="chat-input">
-        <select id="users">
+        <select class="select-users" id="users">
           <option>Select User</option>
         </select>
         <!-- <input id="receiver-id" placeholder="Receiver id" /> -->
@@ -32,6 +32,8 @@
       });
       // # list users
       socket.on("users_list", (users) => {
+        const dropdown = document.getElementById("users");
+        dropdown.innerHTML = `<option value="">Select User</option>`;
         users.forEach((user) => {
           select_users(user);
         });
@@ -52,13 +54,20 @@
       });
 
       // # load one - one messages
-      socket.on("conversation_loaded", (chatHistory) =>{
-        chatHistory.forEach(message => {
-          console.log(message)
+      socket.on("conversation_loaded", (communicators, chatHistory) => {
+        // console.log(communicators,'............')
+        chatHistory.forEach((record) => {
+          if (record.sender_id == communicators.sender_id) {
+            createMessage("You", record.message, "outgoing");
+          }
+          if (
+            record.sender_id == communicators.receiver_id &&
+            record.sender_id != record.receiver_id
+          ) {
+            createMessage(record.sender_name, record.message, "incoming");
+          }
         });
-      })
-
-
+      });
 
       // # functions
       function select_users(user) {
@@ -97,6 +106,8 @@
 
       const usersDropDown = document.getElementById("users");
       usersDropDown.addEventListener("change", function (event) {
+        document.getElementById("chat").innerHTML = "";
+        loadConversation(this.value);
         const selectedUserId = usersDropDown.value;
         // console.log(selectUserId,'.......')
         loadConversation(selectedUserId);
